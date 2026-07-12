@@ -6,7 +6,7 @@ async function json<T>(res: Response): Promise<T> {
 }
 
 export const api = {
-  config: () => fetch("/api/config").then((r) => json<{ demo_mode: boolean }>(r)),
+  config: () => fetch("/api/config").then((r) => json<{ demo_mode: boolean; nemoclaw_active: boolean }>(r)),
   presets: () => fetch("/api/presets").then((r) => json<Preset[]>(r)),
   workers: () => fetch("/api/workers").then((r) => json<Worker[]>(r)),
   refreshWorkers: () =>

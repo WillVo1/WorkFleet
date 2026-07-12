@@ -60,6 +60,10 @@ class Settings:
 
     allowed_screenshot_hosts = ("agp.eu.hcompany.ai", "agp.hcompany.ai")
 
+    # NemoClaw sandbox: in passive mode (default) it logs and stamps manifests
+    # but never blocks. Set NEMOCLAW_ACTIVE=true to enforce sanitization + audit.
+    nemoclaw_active: bool = os.environ.get("NEMOCLAW_ACTIVE", "").lower() in ("1", "true", "yes", "on")
+
 
 settings = Settings()
 

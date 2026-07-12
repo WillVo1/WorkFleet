@@ -12,7 +12,7 @@ import type { Task } from "./types";
 type View = "home" | "runs";
 
 export default function App() {
-  const { tasks, events, workers, demoMode, loadTaskDetail, resync } = useFleet();
+  const { tasks, events, workers, demoMode, nemoclawActive, loadTaskDetail, resync } = useFleet();
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<View>("home");
   const [collapsed, setCollapsed] = useState(false);
@@ -57,6 +57,7 @@ export default function App() {
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
         demoMode={demoMode}
+        nemoclawActive={nemoclawActive}
         onSelect={setSelected}
         onNavigate={navigate}
         onNewTask={() => setNewTaskOpen(true)}
