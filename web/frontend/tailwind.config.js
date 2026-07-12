@@ -14,6 +14,13 @@ export default {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
+      // 10px is the standard corner radius across the app.
+      borderRadius: {
+        md: "10px",
+        lg: "10px",
+        xl: "10px",
+        "2xl": "10px",
+      },
     },
   },
   plugins: [],

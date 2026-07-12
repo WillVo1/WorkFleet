@@ -1,14 +1,21 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { HomeGrid } from "./components/HomeGrid";
+import { FleetTree } from "./components/FleetTree";
 import { NewTask } from "./components/NewTask";
+import { RunsView } from "./components/RunsView";
 import { SessionView } from "./components/SessionView";
 import { Sidebar } from "./components/Sidebar";
 import { useFleet } from "./hooks/useFleet";
+import { api } from "./lib/api";
+import type { Task } from "./types";
+
+type View = "home" | "runs";
 
 export default function App() {
   const { tasks, events, workers, loadTaskDetail, resync } = useFleet();
   const [selected, setSelected] = useState<string | null>(null);
+  const [view, setView] = useState<View>("home");
+  const [collapsed, setCollapsed] = useState(false);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
 
   // hydrate full event history when a task is opened
@@ -21,26 +28,58 @@ export default function App() {
   );
   const selectedTask = selected ? tasks[selected] : null;
 
+  const navigate = useCallback((v: View) => {
+    setView(v);
+    setSelected(null);
+  }, []);
+
+  const rerun = useCallback(async (task: Task) => {
+    const fresh = await api.createTask(task.text, task.preset);
+    setSelected(fresh.id);
+  }, []);
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar
         tasks={taskList}
-        workers={workers}
         selected={selected}
+        view={view}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed((c) => !c)}
         onSelect={setSelected}
+        onNavigate={navigate}
         onNewTask={() => setNewTaskOpen(true)}
         onClearCompleted={() => {
           setSelected(null);
           resync();
         }}
       />
+
       {selectedTask ? (
-        <SessionView task={selectedTask} events={events[selectedTask.id] ?? []} />
-      ) : (
+        <SessionView
+          task={selectedTask}
+          events={events[selectedTask.id] ?? []}
+          onRerun={rerun}
+        />
+      ) : view === "runs" ? (
         <main className="min-w-0 flex-1 overflow-y-auto">
-          <HomeGrid tasks={taskList} workers={workers} onSelect={setSelected} />
+          <RunsView
+            tasks={taskList}
+            onSelect={setSelected}
+            onNewTask={() => setNewTaskOpen(true)}
+          />
+        </main>
+      ) : (
+        <main className="min-w-0 flex-1 overflow-hidden">
+          <FleetTree
+            tasks={taskList}
+            workers={workers}
+            onSelect={setSelected}
+            onNewTask={() => setNewTaskOpen(true)}
+          />
         </main>
       )}
+
       <NewTask
         open={newTaskOpen}
         onClose={() => setNewTaskOpen(false)}

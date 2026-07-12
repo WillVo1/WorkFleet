@@ -26,40 +26,20 @@ const inlineWrapperStyle: CSSProperties = {
   marginTop: 0,
 };
 
+// Solid pulsing text — no gradient. Uses a simple opacity animation to signal
+// in-flight work.
 export const shimmerStyle: CSSProperties = {
   display: "inline-block",
-  color: "var(--og2-shimmer-color, rgba(0, 0, 0, 0.27))",
-  background: [
-    "linear-gradient(90deg,",
-    "var(--og2-shimmer-base, rgba(0,0,0,0.22)) 0%,",
-    "var(--og2-shimmer-base, rgba(0,0,0,0.22)) 50%,",
-    "var(--og2-shimmer-base, rgba(0,0,0,0.22)) 54%,",
-    "var(--og2-shimmer-mid1, rgba(0,0,0,0.3)) 57%,",
-    "var(--og2-shimmer-mid2, rgba(0,0,0,0.34)) 61%,",
-    "var(--og2-shimmer-highlight, rgba(0,0,0,0.42)) 66%,",
-    "var(--og2-shimmer-highlight, rgba(0,0,0,0.42)) 74%,",
-    "var(--og2-shimmer-mid2, rgba(0,0,0,0.34)) 79%,",
-    "var(--og2-shimmer-mid1, rgba(0,0,0,0.3)) 83%,",
-    "var(--og2-shimmer-base, rgba(0,0,0,0.22)) 88%,",
-    "var(--og2-shimmer-base, rgba(0,0,0,0.22)) 92%,",
-    "var(--og2-shimmer-base, rgba(0,0,0,0.22)) 100%)",
-  ].join(" "),
-  backgroundSize: "200% 100%",
-  backgroundRepeat: "repeat-x",
-  backgroundClip: "text",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  willChange: "background-position, opacity",
-  animation: "og2-shimmer 1s linear infinite",
+  color: "var(--og2-secondary-text, #a1a1aa)",
+  willChange: "opacity",
+  animation: "og2-shimmer 1.2s ease-in-out infinite",
   lineHeight: "inherit",
 };
 
 export const SHIMMER_KEYFRAMES = `
   @keyframes og2-shimmer {
-    0%   { background-position: 0% 0; opacity: 0.98; }
-    15%  { opacity: 1; }
-    86%  { background-position: -200% 0; opacity: 1; }
-    100% { background-position: -202% 0; opacity: 0.99; }
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
   }
 `;
 
@@ -73,9 +53,8 @@ export const SHIMMER_KEYFRAMES = `
  * there would just leave a dead gap between a finished step and the shimmer,
  * making the completed-steps row above appear to bounce.
  *
- * All styles are fully inline with CSS-variable hooks so the gradient
- * adapts to dark/light mode via --og2-shimmer-* variables set in
- * appearance.ts.
+ * All styles are fully inline with CSS-variable hooks so the color
+ * adapts to dark/light mode via --og2-secondary-text.
  */
 export function ThinkingIndicator({ active, inline }: ThinkingIndicatorProps) {
   const [show, setShow] = useState(false);
