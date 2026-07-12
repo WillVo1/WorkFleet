@@ -15,6 +15,7 @@ interface Props {
   view: View;
   collapsed: boolean;
   demoMode: boolean;
+  nemoclawActive: boolean;
   onToggleCollapse: () => void;
   onSelect: (id: string | null) => void;
   onNavigate: (view: View) => void;
@@ -23,7 +24,7 @@ interface Props {
 }
 
 export function Sidebar({
-  tasks, workers, selected, view, collapsed, demoMode,
+  tasks, workers, selected, view, collapsed, demoMode, nemoclawActive,
   onToggleCollapse, onSelect, onNavigate, onNewTask, onClearCompleted,
 }: Props) {
   const active = tasks.filter((t) => !TERMINAL.includes(t.status));
@@ -116,6 +117,14 @@ export function Sidebar({
               className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400"
             >
               Demo
+            </span>
+          )}
+          {nemoclawActive && (
+            <span
+              title="NemoClaw sandbox active: prompts are sanitized and agent actions are audited"
+              className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400"
+            >
+              NemoClaw
             </span>
           )}
           <button

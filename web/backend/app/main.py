@@ -50,7 +50,7 @@ async def presets():
 @app.get("/api/config")
 async def config():
     """Client-visible runtime config (gates demo-only UI affordances)."""
-    return {"demo_mode": settings.demo_mode}
+    return {"demo_mode": settings.demo_mode, "nemoclaw_active": settings.nemoclaw_active}
 
 
 @app.get("/api/workers")

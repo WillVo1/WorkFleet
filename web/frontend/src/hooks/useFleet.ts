@@ -9,6 +9,7 @@ export function useFleet() {
   const [events, setEvents] = useState<Record<string, FeedEvent[]>>({});
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [demoMode, setDemoMode] = useState(false);
+  const [nemoclawActive, setNemoclawActive] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   const loadTaskDetail = useCallback(async (id: string) => {
@@ -25,7 +26,10 @@ export function useFleet() {
 
   useEffect(() => {
     resync();
-    api.config().then((c) => setDemoMode(c.demo_mode)).catch(() => {});
+    api.config().then((c) => {
+      setDemoMode(c.demo_mode);
+      setNemoclawActive(c.nemoclaw_active);
+    }).catch(() => {});
 
     let closed = false;
     function connect() {
@@ -58,5 +62,5 @@ export function useFleet() {
     };
   }, []);
 
-  return { tasks, events, workers, demoMode, setWorkers, loadTaskDetail, resync };
+  return { tasks, events, workers, demoMode, nemoclawActive, setWorkers, loadTaskDetail, resync };
 }

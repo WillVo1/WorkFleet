@@ -17,6 +17,7 @@ from .db import db, utcnow
 from .feed import to_feed_event
 from .hai import cancel, create_task_session, make_client, stream_changes
 from .models import FeedEvent, Task, TaskStatus
+from .nemoclaw import nemoclaw
 from .pool import pool
 from .prompts import build_prompt
 from .reset import reset_worker
@@ -85,12 +86,15 @@ class Dispatcher:
         task = await db.get_task(task_id)
         if settings.demo_mode:
             await self._reset_desktop(task_id, worker_name)
+        # NemoClaw pre-flight: sanitize prompt + stamp sandbox manifest
+        manifest = await nemoclaw.pre_flight_check(task_id, task.prompt)
+        await self._emit_status(task_id, f"NemoClaw sandbox: {manifest.sandbox_id}")
         session_id = await create_task_session(self._client, bridge_sid, task.prompt)
         await db.update_task(task_id, worker=worker_name, hai_session_id=session_id,
                              status=TaskStatus.QUEUED_REMOTE)
         await self._broadcast_task(task_id)
         self._watchers[task_id] = asyncio.create_task(
-            self._watch(task_id, worker_name, session_id)
+            self._watch(task_id, worker_name, session_id, manifest)
         )
 
     async def _reset_desktop(self, task_id: str, worker_name: str) -> None:
@@ -118,10 +122,12 @@ class Dispatcher:
         await db.append_event(fe)
         await manager.broadcast("event", fe.model_dump())
 
-    async def _watch(self, task_id: str, worker_name: str, session_id: str) -> None:
+    async def _watch(self, task_id: str, worker_name: str, session_id: str,
+                     manifest=None) -> None:
         seq = 0
         steps, cost = 0, 0.0
         final_status, outcome = "", None
+        raw_events: list[dict] = []
         try:
             async for status, out, events in stream_changes(self._client, session_id):
                 final_status, outcome = status, out
@@ -153,6 +159,15 @@ class Dispatcher:
         except Exception:
             logger.exception("watcher crashed for %s", task_id)
             final_status = "failed"
+
+        # NemoClaw post-flight audit: scan agent actions for policy violations
+        if manifest:
+            audit = await nemoclaw.post_flight_audit(task_id, manifest, raw_events)
+            if not audit["clean"]:
+                await self._emit_status(
+                    task_id,
+                    f"NemoClaw audit: {len(audit['violations'])} violation(s) flagged"
+                )
 
         # settled: verify, then finish
         if final_status == "completed" and outcome in ("success", "partial", None):
