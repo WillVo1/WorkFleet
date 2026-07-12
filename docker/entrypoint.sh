@@ -61,11 +61,6 @@ case "$APP" in
     libreoffice --impress &
     sleep 5
     ;;
-  thunderbird)
-    echo "[entrypoint] starting Thunderbird"
-    thunderbird &
-    sleep 8
-    ;;
   slack)
     echo "[entrypoint] starting Slack (with --no-sandbox for Docker)"
     slack --no-sandbox --disable-gpu &

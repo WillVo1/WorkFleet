@@ -23,8 +23,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ffmpeg \
         # LibreOffice (word processor, spreadsheet, presentation — no login)
         libreoffice libreoffice-gtk3 \
-        # Thunderbird (email client — has setup wizard but can skip)
-        thunderbird \
         # Slack (messaging — needs login)
         && wget -q -O /tmp/slack.deb "https://downloads.slack-edge.com/desktop-releases/linux/x64/4.41.105/slack-desktop-4.41.105-amd64.deb" \
         && apt-get install -y /tmp/slack.deb || true \
