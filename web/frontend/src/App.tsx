@@ -38,6 +38,15 @@ export default function App() {
     setSelected(fresh.id);
   }, []);
 
+  const deleteTask = useCallback(
+    async (id: string) => {
+      await api.deleteTask(id);
+      setSelected((cur) => (cur === id ? null : cur));
+      resync();
+    },
+    [resync]
+  );
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar
@@ -51,6 +60,7 @@ export default function App() {
         onSelect={setSelected}
         onNavigate={navigate}
         onNewTask={() => setNewTaskOpen(true)}
+        onDelete={deleteTask}
         onClearCompleted={() => {
           setSelected(null);
           resync();

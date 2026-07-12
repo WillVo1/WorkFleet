@@ -82,11 +82,21 @@ export function SessionView({ task, events, onRerun }: Props) {
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2 text-[13px] text-zinc-600">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-zinc-600" />
-              {task.status === "queued_remote"
-                ? "waiting for a free session slot…"
-                : "connecting to the agent…"}
+            <div className="flex flex-col items-center gap-4 text-[13px] text-zinc-600">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-zinc-600" />
+                {task.status === "queued_remote"
+                  ? "waiting for a free session slot…"
+                  : "connecting to the agent…"}
+              </div>
+              {running && (
+                <button
+                  onClick={() => api.stopTask(task.id)}
+                  className="rounded-sm border border-zinc-700 px-3 py-1 text-[12px] text-zinc-300 transition-colors hover:border-red-800 hover:bg-red-950/40 hover:text-red-300"
+                >
+                  Stop
+                </button>
+              )}
             </div>
           )}
         </div>

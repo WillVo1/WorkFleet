@@ -131,6 +131,26 @@ class Database:
         await self.conn.commit()
         return cur.rowcount
 
+    async def delete_task(self, task_id: str) -> str | None:
+        """Delete one finished task and its events.
+
+        Returns None if no such task, "active" if it's still running (refused),
+        or "deleted" on success.
+        """
+        terminal = {
+            TaskStatus.SUCCEEDED.value, TaskStatus.DONE_UNVERIFIED.value,
+            TaskStatus.FAILED.value, TaskStatus.CANCELLED.value,
+        }
+        task = await self.get_task(task_id)
+        if not task:
+            return None
+        if task.status.value not in terminal:
+            return "active"
+        await self.conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        await self.conn.execute("DELETE FROM events WHERE task_id = ?", (task_id,))
+        await self.conn.commit()
+        return "deleted"
+
     # -- events --------------------------------------------------------------
 
     async def append_event(self, ev: FeedEvent) -> None:

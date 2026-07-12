@@ -25,6 +25,7 @@ export const api = {
       body: JSON.stringify({ text, preset }),
     }).then((r) => json<Task>(r)),
   stopTask: (id: string) => fetch(`/api/tasks/${id}/stop`, { method: "POST" }),
+  deleteTask: (id: string) => fetch(`/api/tasks/${id}`, { method: "DELETE" }),
   clearCompleted: () => fetch("/api/tasks/clear-completed", { method: "POST" }),
   transcribe: (audio: Blob) =>
     fetch("/api/transcribe", {

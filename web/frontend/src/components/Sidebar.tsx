@@ -19,12 +19,13 @@ interface Props {
   onSelect: (id: string | null) => void;
   onNavigate: (view: View) => void;
   onNewTask: () => void;
+  onDelete: (id: string) => void;
   onClearCompleted: () => void;
 }
 
 export function Sidebar({
   tasks, workers, selected, view, collapsed, demoMode,
-  onToggleCollapse, onSelect, onNavigate, onNewTask, onClearCompleted,
+  onToggleCollapse, onSelect, onNavigate, onNewTask, onDelete, onClearCompleted,
 }: Props) {
   const active = tasks.filter((t) => !TERMINAL.includes(t.status));
   const completed = tasks.filter((t) => TERMINAL.includes(t.status));
@@ -51,11 +52,11 @@ export function Sidebar({
   // ── collapsed icon rail ────────────────────────────────────────────
   if (collapsed) {
     return (
-      <aside className="flex h-screen w-14 shrink-0 flex-col items-center gap-1 border-r border-zinc-850 bg-zinc-950 py-3">
+      <aside className="flex h-screen w-14 shrink-0 flex-col items-center gap-1 bg-zinc-900 py-3">
         <button
           onClick={onToggleCollapse}
           title="Expand sidebar"
-          className="flex h-10 w-10 items-center justify-center rounded-sm hover:bg-zinc-900"
+          className="flex h-10 w-10 items-center justify-center rounded-sm hover:bg-zinc-850"
         >
           <FleetLogo size={26} />
         </button>
@@ -84,23 +85,37 @@ export function Sidebar({
   }
 
   // ── expanded sidebar ───────────────────────────────────────────────
-  const Item = ({ t }: { t: Task }) => (
-    <button
-      onClick={() => onSelect(t.id)}
-      className={`w-full rounded-sm px-3 py-2 text-left text-sm transition-colors ${
-        selected === t.id ? "bg-zinc-800" : "hover:bg-zinc-900"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate">{t.text}</span>
-        <StatusPill status={t.status} />
+  const Item = ({ t }: { t: Task }) => {
+    const done = TERMINAL.includes(t.status);
+    return (
+      <div className="group relative">
+        <button
+          onClick={() => onSelect(t.id)}
+          className={`w-full rounded-sm px-3 py-2 pr-9 text-left text-sm transition-colors ${
+            selected === t.id ? "bg-zinc-800" : "hover:bg-zinc-850"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate">{t.text}</span>
+            <StatusPill status={t.status} />
+          </div>
+          {t.worker && <div className="mt-0.5 text-[11px] text-zinc-500">{t.worker}</div>}
+        </button>
+        {done && (
+          <button
+            onClick={() => onDelete(t.id)}
+            title="Delete session"
+            className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-sm bg-zinc-850 text-zinc-500 opacity-0 transition-opacity hover:bg-zinc-800 hover:text-red-400 group-hover:opacity-100"
+          >
+            <TrashIcon />
+          </button>
+        )}
       </div>
-      {t.worker && <div className="mt-0.5 text-[11px] text-zinc-500">{t.worker}</div>}
-    </button>
-  );
+    );
+  };
 
   return (
-    <aside className="flex h-screen w-72 shrink-0 flex-col border-r border-zinc-850 bg-zinc-950 p-3">
+    <aside className="flex h-screen w-72 shrink-0 flex-col bg-zinc-900 p-3 pt-8">
       <div className="mb-3 flex items-center justify-between">
         <button
           onClick={() => onNavigate("home")}
@@ -121,7 +136,7 @@ export function Sidebar({
           <button
             onClick={onToggleCollapse}
             title="Collapse sidebar"
-            className="rounded-sm p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
+            className="rounded-sm p-1.5 text-zinc-500 hover:bg-zinc-850 hover:text-zinc-200"
           >
             <CollapseIcon />
           </button>
@@ -160,6 +175,9 @@ export function Sidebar({
             </h3>
             {active.map((t) => <Item key={t.id} t={t} />)}
           </section>
+        )}
+        {active.length > 0 && completed.length > 0 && (
+          <div className="mx-1 h-px bg-zinc-850" />
         )}
         {completed.length > 0 && (
           <section>
@@ -234,7 +252,7 @@ function NavItem({
     <button
       onClick={onClick}
       className={`flex w-full items-center gap-2.5 rounded-sm px-3 py-2 text-sm transition-colors ${
-        active ? "bg-zinc-800 text-zinc-100" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+        active ? "bg-zinc-800 text-zinc-100" : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-100"
       }`}
     >
       <span className="text-zinc-500">{icon}</span>
@@ -267,7 +285,7 @@ function RailButton({
           ? "bg-zinc-100 text-zinc-900 hover:bg-white"
           : active
           ? "bg-zinc-800 text-zinc-100"
-          : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+          : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-100"
       }`}
     >
       {children}
@@ -320,6 +338,13 @@ function CollapseIcon() {
     <svg {...iconProps} width={16} height={16}>
       <path d="M15 6l-6 6 6 6" />
       <path d="M9 6v12" opacity={0.5} />
+    </svg>
+  );
+}
+function TrashIcon() {
+  return (
+    <svg {...iconProps} width={13} height={13}>
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3" />
     </svg>
   );
 }

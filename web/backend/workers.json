@@ -1,6 +1,7 @@
 {
   "workers": [
     { "name": "agent-vm-1", "ip": "10.150.0.7" },
-    { "name": "agent-vm-2", "ip": "10.150.0.9" }
+    { "name": "agent-vm-2", "ip": "10.150.0.9" },
+    { "name": "agent-vm-3", "ip": "10.150.0.10" }
   ]
 }

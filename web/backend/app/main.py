@@ -138,6 +138,16 @@ async def stop_task(task_id: str):
     return {"stopped": True}
 
 
+@app.delete("/api/tasks/{task_id}")
+async def delete_task(task_id: str):
+    result = await db.delete_task(task_id)
+    if result is None:
+        raise HTTPException(404)
+    if result == "active":
+        raise HTTPException(409, "stop the task before deleting it")
+    return {"deleted": True}
+
+
 @app.get("/api/screenshot")
 async def screenshot(url: str):
     """Proxy session screenshots: browser <img> tags can't send the bearer token."""

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { siDropbox, siQuickbooks, siSap } from "simple-icons";
 
 import { api } from "../lib/api";
 import { MicRecorder } from "../lib/recorder";
@@ -99,27 +100,11 @@ export function FleetTree({ tasks, workers, onSelect, onNewTask }: Props) {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(60% 50% at 50% 40%, rgba(0,191,255,0.06), transparent 70%)",
+            "radial-gradient(60% 50% at 50% 28%, rgba(0,191,255,0.06), transparent 70%)",
         }}
       />
 
-      {/* headline */}
-      <div className="relative z-10 pt-12 text-center">
-        <h1 className="bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-[42px] font-semibold leading-[1.05] tracking-[-0.02em] text-transparent">
-          Clones your computer
-        </h1>
-        <p className="mt-3.5 text-[16px] font-medium tracking-tight text-zinc-400">
-          Files, apps,{" "}
-          <span
-            className="bg-gradient-to-r bg-clip-text text-transparent"
-            style={{ backgroundImage: `linear-gradient(90deg, ${BLUE}, #7dd3fc)` }}
-          >
-            everything.
-          </span>
-        </p>
-      </div>
-
-      {/* centered hero: tree + command bar */}
+      {/* centered hero: tree + headline + command bar */}
       <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center">
 
       {/* ── the tree stage ─────────────────────────────────────────── */}
@@ -127,6 +112,7 @@ export function FleetTree({ tasks, workers, onSelect, onNewTask }: Props) {
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="pointer-events-none absolute inset-0 h-full w-full"
+          style={{ overflow: "visible" }}
           fill="none"
         >
           {SLOTS.map((s, i) => {
@@ -145,6 +131,14 @@ export function FleetTree({ tasks, workers, onSelect, onNewTask }: Props) {
               />
             );
           })}
+          {/* branch out to the off-screen 4th frame */}
+          <path
+            d={`M${ORIGIN.x},${ORIGIN.y} C ${ORIGIN.x},340 ${SLOTS[2].cx + 332},310 ${SLOTS[2].cx + 332},${ANCHOR_Y}`}
+            stroke="#27272a"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeDasharray="5 7"
+          />
           <Laptop />
         </svg>
 
@@ -193,10 +187,56 @@ export function FleetTree({ tasks, workers, onSelect, onNewTask }: Props) {
             </button>
           );
         })}
+
+        {/* files feeding into the computer on the left */}
+        <div
+          className="pointer-events-none absolute flex flex-col items-center gap-1.5 text-zinc-500"
+          style={{ left: 276, top: 430, width: 96 }}
+        >
+          <FilesGlyph />
+          <span className="text-[10px] font-medium uppercase tracking-wide">Files</span>
+        </div>
+
+        {/* desktop apps, clustered to the right of the computer */}
+        <div className="pointer-events-none absolute" style={{ left: 602, top: 418, width: 152 }}>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-4">
+            {RIGHT_LOGOS.map((icon) => (
+              <BrandIcon
+                key={icon.title}
+                icon={icon}
+                size={icon.title === "SAP" ? 38 : 24}
+                colored
+              />
+            ))}
+            <img src="/tryton-logo.svg" alt="Tryton" width={26} height={26} className="rounded" />
+          </div>
+        </div>
+
+        {/* the fleet continues off-screen: an equidistant 4th frame, cut by the page edge */}
+        <div
+          className="pointer-events-none absolute rounded-xl border border-dashed border-zinc-700"
+          style={{ left: SLOTS[2].left + 332, top: SLOTS[0].top, width: CARD.w, height: CARD.h }}
+        />
+      </div>
+
+      {/* headline, right above the input */}
+      <div className="relative z-10 mt-1 text-center">
+        <h1 className="bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-[42px] font-semibold leading-[1.05] tracking-[-0.02em] text-transparent">
+          Clone your computer
+        </h1>
+        <p className="mt-2 text-[16px] font-medium tracking-tight text-zinc-400">
+          Files, apps,{" "}
+          <span
+            className="bg-gradient-to-r bg-clip-text text-transparent"
+            style={{ backgroundImage: `linear-gradient(90deg, ${BLUE}, #7dd3fc)` }}
+          >
+            everything.
+          </span>
+        </p>
       </div>
 
       {/* ── command card ───────────────────────────────────────────── */}
-      <div className="relative z-10 mt-5 w-full max-w-2xl">
+      <div className="relative z-10 mt-7 w-full max-w-2xl">
         {/* blue glow radiating straight from the card edges (no gap) */}
         <div
           className={`relative rounded-[22px] border bg-zinc-900/80 backdrop-blur transition-colors ${
@@ -304,14 +344,58 @@ export function FleetTree({ tasks, workers, onSelect, onNewTask }: Props) {
   );
 }
 
+type SimpleIcon = { path: string; hex: string; title: string };
+
+/** Renders a simple-icons brand mark; monochrome by default, brand-colored when `colored`. */
+function BrandIcon({ icon, size = 22, colored = false }: { icon: SimpleIcon; size?: number; colored?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill={colored ? `#${icon.hex}` : "currentColor"}
+      aria-label={icon.title}
+    >
+      <title>{icon.title}</title>
+      <path d={icon.path} />
+    </svg>
+  );
+}
+
+/** "Files" clip-art — a folder that feeds into the computer. */
+function FilesGlyph() {
+  return (
+    <svg
+      width={42}
+      height={42}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M13.5 4H17a1 1 0 0 1 1 1v3.5" opacity={0.4} />
+      <path
+        d="M3 8a1.5 1.5 0 0 1 1.5-1.5H9l2 2h8.5A1.5 1.5 0 0 1 21 10v7.5A1.5 1.5 0 0 1 19.5 19H4.5A1.5 1.5 0 0 1 3 17.5Z"
+        fill="currentColor"
+        fillOpacity={0.08}
+      />
+    </svg>
+  );
+}
+
+/** Desktop enterprise apps the agents drive (real brand marks via simple-icons). */
+const RIGHT_LOGOS = [siSap, siQuickbooks, siDropbox];
+
 /** Empty branch endpoint: a dim dashed frame so the 3-slot cap reads upfront. */
 function GhostSlot({ style }: { style: React.CSSProperties }) {
   return (
     <div
       style={style}
-      className="flex items-center justify-center rounded-xl border border-dashed border-zinc-800/80"
+      className="flex items-center justify-center rounded-xl border border-dashed border-zinc-700"
     >
-      <div className="flex flex-col items-center gap-1.5 text-zinc-700">
+      <div className="flex flex-col items-center gap-1.5 text-zinc-500">
         <MonitorIcon />
         <span className="text-[10px] uppercase tracking-wide">idle</span>
       </div>

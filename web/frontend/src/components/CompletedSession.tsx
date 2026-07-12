@@ -22,7 +22,7 @@ const TABS: { key: Tab; label: string; code?: boolean }[] = [
 ];
 
 export function CompletedSession({ task, events, onRerun }: Props) {
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>("recording");
 
   // screenshot frames (fallback to the last live frame) → the "recording"
   const frames = useMemo(() => {
