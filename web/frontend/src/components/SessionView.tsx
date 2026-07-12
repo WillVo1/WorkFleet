@@ -3,15 +3,17 @@ import { useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import type { FeedEvent, Task } from "../types";
 import { screenshotSrc, TERMINAL } from "../types";
+import { CompletedSession } from "./CompletedSession";
 import { Feed } from "./Feed";
 import { StatusPill } from "./StatusPill";
 
 interface Props {
   task: Task;
   events: FeedEvent[];
+  onRerun: (task: Task) => void;
 }
 
-export function SessionView({ task, events }: Props) {
+export function SessionView({ task, events, onRerun }: Props) {
   const running = !TERMINAL.includes(task.status);
   const feedRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -43,6 +45,11 @@ export function SessionView({ task, events }: Props) {
     return () => ro.disconnect();
   }, []);
 
+  // finished tasks render the tabbed report instead of the live split view
+  if (!running) {
+    return <CompletedSession task={task} events={events} onRerun={onRerun} />;
+  }
+
   return (
     <div className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
       <header className="flex items-center gap-3 border-b border-zinc-850 px-6 py-3">
@@ -53,36 +60,27 @@ export function SessionView({ task, events }: Props) {
           {task.steps > 0 && <span>{task.steps} steps</span>}
           {task.cost_usd > 0 && <span>${task.cost_usd.toFixed(3)}</span>}
         </span>
-        {running && (
-          <button
-            onClick={() => api.stopTask(task.id)}
-            className="rounded-md border border-zinc-700 px-3 py-1 text-[12px] text-zinc-300 transition-colors hover:border-red-800 hover:bg-red-950/40 hover:text-red-300"
-          >
-            Stop
-          </button>
-        )}
       </header>
-
-      {task.status === "succeeded" && (
-        <div className="border-b border-emerald-900 bg-emerald-950/50 px-6 py-2 text-sm text-emerald-200">
-          ✓ Task completed — {task.verification}
-        </div>
-      )}
-      {task.status === "failed" && task.verification && (
-        <div className="border-b border-red-900 bg-red-950/50 px-6 py-2 text-sm text-red-200">
-          ✗ {task.verification}
-        </div>
-      )}
 
       <div className="flex min-h-0 flex-1">
         {/* live view: newest frame */}
-        <div className="flex w-[62%] items-center justify-center bg-black p-5">
+        <div className="flex w-[62%] items-start justify-center bg-black p-5">
           {task.last_screenshot_url ? (
-            <img
-              src={screenshotSrc(task.last_screenshot_url)}
-              alt="live desktop"
-              className="max-h-full max-w-full rounded-lg border border-zinc-850 shadow-2xl"
-            />
+            <div className="flex flex-col items-end gap-3">
+              <img
+                src={screenshotSrc(task.last_screenshot_url)}
+                alt="live desktop"
+                className="max-h-full max-w-full rounded-lg border border-zinc-850 shadow-2xl"
+              />
+              {running && (
+                <button
+                  onClick={() => api.stopTask(task.id)}
+                  className="rounded-sm border border-zinc-700 px-3 py-1 text-[12px] text-zinc-300 transition-colors hover:border-red-800 hover:bg-red-950/40 hover:text-red-300"
+                >
+                  Stop
+                </button>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-2 text-[13px] text-zinc-600">
               <span className="h-2 w-2 animate-pulse rounded-full bg-zinc-600" />

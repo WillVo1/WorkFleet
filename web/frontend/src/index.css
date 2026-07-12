@@ -4,9 +4,52 @@
 
 :root {
   /* Dark-mode vars for the vendored feed components (see DESIGN.md §6.1) */
-  --og2-shimmer-base: #52525b;
-  --og2-shimmer-highlight: #fafafa;
   --og2-secondary-text: #a1a1aa;
   --og2-primary-text: #e4e4e7;
   --og2-border: #27272a;
+}
+
+/* ── FleetTree hero animations ─────────────────────────────────────── */
+/* A replica "grows" out of the computer: fades + scales up from its base. */
+@keyframes fleetGrow {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* The branch line draws itself in (paths use pathLength="100"). */
+@keyframes fleetDraw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.fleet-node {
+  transform-origin: bottom center;
+  animation: fleetGrow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* Suggestion cards popping up out of the bar's top-left corner. */
+@keyframes fleetPop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fleet-pop {
+  transform-origin: bottom left;
+  animation: fleetPop 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.fleet-branch {
+  stroke-dasharray: 100;
+  animation: fleetDraw 0.7s ease forwards;
 }
