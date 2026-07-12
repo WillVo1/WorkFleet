@@ -88,7 +88,7 @@ fi
 # extraction fully succeeded — swap: wipe $HOME (except the stage), copy the
 # staged tree (incl. dotfiles) back in, then drop the stage.
 find "$HOME_DIR" -mindepth 1 -maxdepth 1 ! -name ".reset-stage.$$" -exec rm -rf {} + 2>/dev/null || true
-cp -a "$STAGE"/. "$HOME_DIR"/ 2>/dev/null
+cp -a "$STAGE"/. "$HOME_DIR"/
 rc=$?
 rm -rf "$STAGE"
 if [ "$rc" -ne 0 ]; then
