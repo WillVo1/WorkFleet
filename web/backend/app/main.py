@@ -16,6 +16,7 @@ from .dispatcher import dispatcher
 from .models import TaskCreate
 from .pool import pool
 from .prompts import PRESETS
+from .reset import capture_baseline, reset_worker
 from .stt import TranscriptionError, transcribe
 from .ws import manager
 
@@ -46,6 +47,12 @@ async def presets():
     return [{"key": k, "label": v["label"]} for k, v in PRESETS.items()]
 
 
+@app.get("/api/config")
+async def config():
+    """Client-visible runtime config (gates demo-only UI affordances)."""
+    return {"demo_mode": settings.demo_mode}
+
+
 @app.get("/api/workers")
 async def workers():
     return [w.model_dump() for w in pool.workers]
@@ -54,6 +61,38 @@ async def workers():
 @app.post("/api/workers/refresh")
 async def workers_refresh():
     return [w.model_dump() for w in await pool.refresh()]
+
+
+def _require_demo() -> None:
+    if not settings.demo_mode:
+        raise HTTPException(403, "demo mode is off (set DEMO_MODE=1)")
+
+
+def _require_known_worker(name: str) -> None:
+    if name not in {w.name for w in pool.workers}:
+        raise HTTPException(404, f"unknown worker '{name}'")
+
+
+@app.post("/api/workers/{name}/reset")
+async def worker_reset(name: str):
+    """Manually rewind a worker's desktop to the pristine baseline (demo only)."""
+    _require_demo()
+    _require_known_worker(name)
+    ok, summary = await reset_worker(name)
+    if not ok:
+        raise HTTPException(502, summary)
+    return {"reset": True, "summary": summary}
+
+
+@app.post("/api/workers/{name}/baseline")
+async def worker_baseline(name: str):
+    """Capture a worker's current $HOME as the demo baseline (demo only)."""
+    _require_demo()
+    _require_known_worker(name)
+    ok, summary = await capture_baseline(name)
+    if not ok:
+        raise HTTPException(502, summary)
+    return {"captured": True, "summary": summary}
 
 
 @app.post("/api/task", status_code=201)

@@ -7,7 +7,7 @@ import { Sidebar } from "./components/Sidebar";
 import { useFleet } from "./hooks/useFleet";
 
 export default function App() {
-  const { tasks, events, workers, loadTaskDetail, resync } = useFleet();
+  const { tasks, events, workers, demoMode, loadTaskDetail, resync } = useFleet();
   const [selected, setSelected] = useState<string | null>(null);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
 
@@ -27,6 +27,7 @@ export default function App() {
         tasks={taskList}
         workers={workers}
         selected={selected}
+        demoMode={demoMode}
         onSelect={setSelected}
         onNewTask={() => setNewTaskOpen(true)}
         onClearCompleted={() => {

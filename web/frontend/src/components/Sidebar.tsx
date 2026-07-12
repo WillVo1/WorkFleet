@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { api } from "../lib/api";
 import type { Task, Worker } from "../types";
 import { TERMINAL } from "../types";
@@ -7,20 +9,34 @@ interface Props {
   tasks: Task[];
   workers: Worker[];
   selected: string | null;
+  demoMode: boolean;
   onSelect: (id: string | null) => void;
   onNewTask: () => void;
   onClearCompleted: () => void;
 }
 
 export function Sidebar({
-  tasks, workers, selected, onSelect, onNewTask, onClearCompleted,
+  tasks, workers, selected, demoMode, onSelect, onNewTask, onClearCompleted,
 }: Props) {
   const active = tasks.filter((t) => !TERMINAL.includes(t.status));
   const completed = tasks.filter((t) => TERMINAL.includes(t.status));
+  const [resetting, setResetting] = useState<string | null>(null);
 
   async function clearCompleted() {
     await api.clearCompleted();
     onClearCompleted();
+  }
+
+  async function resetWorker(name: string) {
+    if (resetting) return;
+    setResetting(name);
+    try {
+      await api.resetWorker(name);
+    } catch {
+      /* surfaced server-side; keep the UI quiet on failure */
+    } finally {
+      setResetting(null);
+    }
   }
 
   const Item = ({ t }: { t: Task }) => (
@@ -40,12 +56,22 @@ export function Sidebar({
 
   return (
     <aside className="flex h-screen w-72 shrink-0 flex-col border-r border-zinc-850 bg-zinc-950 p-3">
-      <button
-        onClick={() => onSelect(null)}
-        className="mb-3 text-left text-lg font-semibold tracking-tight"
-      >
-        Tryton Fleet
-      </button>
+      <div className="mb-3 flex items-center gap-2">
+        <button
+          onClick={() => onSelect(null)}
+          className="text-left text-lg font-semibold tracking-tight"
+        >
+          Tryton Fleet
+        </button>
+        {demoMode && (
+          <span
+            title="Demo mode: each worker's desktop is reset to a clean baseline before every task"
+            className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400"
+          >
+            Demo
+          </span>
+        )}
+      </div>
       <button
         onClick={onNewTask}
         className="mb-4 rounded-lg bg-zinc-100 px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-white"
@@ -83,7 +109,10 @@ export function Sidebar({
       <footer className="mt-3 shrink-0 border-t border-zinc-850 pt-2">
         <h3 className="mb-1 text-[11px] font-semibold uppercase text-zinc-500">Workers</h3>
         {workers.map((w) => (
-          <div key={w.name} className="flex items-center gap-2 py-0.5 text-xs text-zinc-400">
+          <div
+            key={w.name}
+            className="group flex items-center gap-2 py-0.5 text-xs text-zinc-400"
+          >
             <span
               className={`h-2 w-2 rounded-full ${
                 w.status === "idle" ? "bg-emerald-500"
@@ -92,7 +121,17 @@ export function Sidebar({
               }`}
             />
             {w.name}
-            <span className="ml-auto text-zinc-600">{w.status}</span>
+            {demoMode && (
+              <button
+                onClick={() => resetWorker(w.name)}
+                disabled={resetting === w.name || w.status === "busy"}
+                title="Reset this worker's desktop to the clean baseline"
+                className="ml-auto text-[11px] text-zinc-600 opacity-0 transition-opacity hover:text-amber-400 disabled:text-zinc-700 group-hover:opacity-100 disabled:opacity-100"
+              >
+                {resetting === w.name ? "resetting…" : "reset"}
+              </button>
+            )}
+            <span className={`text-zinc-600 ${demoMode ? "" : "ml-auto"}`}>{w.status}</span>
           </div>
         ))}
       </footer>

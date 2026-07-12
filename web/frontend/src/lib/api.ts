@@ -6,10 +6,15 @@ async function json<T>(res: Response): Promise<T> {
 }
 
 export const api = {
+  config: () => fetch("/api/config").then((r) => json<{ demo_mode: boolean }>(r)),
   presets: () => fetch("/api/presets").then((r) => json<Preset[]>(r)),
   workers: () => fetch("/api/workers").then((r) => json<Worker[]>(r)),
   refreshWorkers: () =>
     fetch("/api/workers/refresh", { method: "POST" }).then((r) => json<Worker[]>(r)),
+  resetWorker: (name: string) =>
+    fetch(`/api/workers/${encodeURIComponent(name)}/reset`, { method: "POST" }).then((r) =>
+      json<{ reset: boolean; summary: string }>(r)
+    ),
   tasks: () => fetch("/api/tasks").then((r) => json<Task[]>(r)),
   task: (id: string) =>
     fetch(`/api/tasks/${id}`).then((r) => json<{ task: Task; events: FeedEvent[] }>(r)),

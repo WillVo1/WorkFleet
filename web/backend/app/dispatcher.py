@@ -12,12 +12,14 @@ import logging
 import uuid
 from typing import Optional
 
+from .config import settings
 from .db import db, utcnow
 from .feed import to_feed_event
 from .hai import cancel, create_task_session, make_client, stream_changes
-from .models import Task, TaskStatus
+from .models import FeedEvent, Task, TaskStatus
 from .pool import pool
 from .prompts import build_prompt
+from .reset import reset_worker
 from .verify import verify
 from .ws import manager
 
@@ -81,6 +83,8 @@ class Dispatcher:
 
     async def _launch(self, task_id: str, worker_name: str, bridge_sid: str) -> None:
         task = await db.get_task(task_id)
+        if settings.demo_mode:
+            await self._reset_desktop(task_id, worker_name)
         session_id = await create_task_session(self._client, bridge_sid, task.prompt)
         await db.update_task(task_id, worker=worker_name, hai_session_id=session_id,
                              status=TaskStatus.QUEUED_REMOTE)
@@ -88,6 +92,31 @@ class Dispatcher:
         self._watchers[task_id] = asyncio.create_task(
             self._watch(task_id, worker_name, session_id)
         )
+
+    async def _reset_desktop(self, task_id: str, worker_name: str) -> None:
+        """Rewind the worker's desktop to baseline before the task runs.
+
+        Best-effort: a reset failure is surfaced in the feed but does NOT block
+        dispatch — a demo starting from a dirty desktop beats one that won't
+        start at all. Emitted as a status event so the operator sees it happen.
+        """
+        ok, summary = await reset_worker(worker_name)
+        if not ok:
+            logger.warning("demo reset for %s on %s: %s", task_id, worker_name, summary)
+        await self._emit_status(task_id, f"Demo reset: {summary}")
+
+    async def _emit_status(self, task_id: str, text: str) -> None:
+        """Append a pre-dispatch status feed event and broadcast it.
+
+        Uses a negative seq: the watcher owns the 0..N sequence, so negatives
+        sort ahead of the real stream (reset happens first) without colliding
+        with the watcher's INSERT OR REPLACE or the frontend's seq-dedup.
+        """
+        existing = await db.list_events(task_id)
+        seq = min((e.seq for e in existing), default=0) - 1
+        fe = FeedEvent(task_id=task_id, seq=seq, kind="status", text=text, ts=utcnow())
+        await db.append_event(fe)
+        await manager.broadcast("event", fe.model_dump())
 
     async def _watch(self, task_id: str, worker_name: str, session_id: str) -> None:
         seq = 0

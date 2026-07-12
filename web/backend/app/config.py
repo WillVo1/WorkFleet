@@ -34,6 +34,26 @@ class Settings:
     # Per-run budget (user decision 2026-07-11: max steps, default time)
     max_steps: int = int(os.environ.get("MAX_STEPS", "200"))
 
+    # Demo mode: rewind each worker's desktop to a pristine baseline BEFORE every
+    # task, so re-running a demo starts from a clean slate (e.g. no Slack window
+    # left open from the last run). Task-agnostic: it restores the desktop, it
+    # does not undo whatever the task wrote to external services. Default OFF so
+    # it can never touch a real environment. See reset.py.
+    demo_mode: bool = os.environ.get("DEMO_MODE", "").lower() in ("1", "true", "yes", "on")
+    # Remote user whose $HOME is the desktop session (baseline is a tar of this dir).
+    demo_user: str = os.environ.get("DEMO_USER", "agent")
+    # Where the pristine-home tarball lives on each VM (written by capture-baseline).
+    demo_baseline_path: str = os.environ.get(
+        "DEMO_BASELINE_PATH", "/opt/agent/home-baseline.tgz"
+    )
+    # GUI processes the reset kills; the Xvfb/openbox/SDK-bridge stack is left alone
+    # so the bridge session_id survives (see linux-runtime-proof/FINDINGS.md).
+    demo_kill_processes: tuple[str, ...] = tuple(
+        p for p in os.environ.get(
+            "DEMO_KILL_PROCESSES", "slack,chrome,chromium,firefox,xterm,soffice"
+        ).split(",") if p.strip()
+    )
+
     # Long-poll tuning for the event watcher
     changes_wait_seconds: int = 15
     watcher_retry_seconds: float = 3.0
