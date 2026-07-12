@@ -1,8 +1,8 @@
-import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 
 import { useTypewriter } from "../hooks/useTypewriter";
 import type { FeedEvent } from "../types";
+import { SHIMMER_KEYFRAMES, shimmerStyle } from "./vendor/ThinkingIndicator";
 
 interface Props {
   events: FeedEvent[];
@@ -48,42 +48,6 @@ function toSteps(events: FeedEvent[]): { steps: Step[]; answer?: FeedEvent } {
 const secs = (ms?: number) =>
   ms && ms > 0 ? `${(ms / 1000).toFixed(ms < 10000 ? 1 : 0)}s` : "";
 
-const SHIMMER_KEYFRAMES = `
-  @keyframes og2-shimmer {
-    0%   { background-position: 0% 0; opacity: 0.98; }
-    15%  { opacity: 1; }
-    86%  { background-position: -200% 0; opacity: 1; }
-    100% { background-position: -202% 0; opacity: 0.99; }
-  }
-`;
-
-const shimmerStyle: CSSProperties = {
-  display: "inline-block",
-  background: [
-    "linear-gradient(90deg,",
-    "var(--og2-shimmer-base, #52525b) 0%,",
-    "var(--og2-shimmer-base, #52525b) 50%,",
-    "var(--og2-shimmer-base, #52525b) 54%,",
-    "var(--og2-shimmer-mid1, #71717a) 57%,",
-    "var(--og2-shimmer-mid2, #a1a1aa) 61%,",
-    "var(--og2-shimmer-highlight, #fafafa) 66%,",
-    "var(--og2-shimmer-highlight, #fafafa) 74%,",
-    "var(--og2-shimmer-mid2, #a1a1aa) 79%,",
-    "var(--og2-shimmer-mid1, #71717a) 83%,",
-    "var(--og2-shimmer-base, #52525b) 88%,",
-    "var(--og2-shimmer-base, #52525b) 92%,",
-    "var(--og2-shimmer-base, #52525b) 100%)",
-  ].join(" "),
-  backgroundSize: "200% 100%",
-  backgroundRepeat: "repeat-x",
-  backgroundClip: "text",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  willChange: "background-position, opacity",
-  animation: "og2-shimmer 1s linear infinite",
-  fontSize: "13px",
-  fontWeight: 500,
-};
 
 function Thought({ text, ms, live }: { text: string; ms?: number; live: boolean }) {
   const [open, setOpen] = useState(live);
